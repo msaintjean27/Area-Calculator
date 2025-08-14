@@ -3,7 +3,7 @@
 A simple **Area Calculator** implemented in **Java** (CLI) and as an **interactive web app**.  
 The project demonstrates basic control flow, user input handling, and UI design for multiple shapes.
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Click%20Here-brightgreen)]([https://msaintjean27.github.io/Area-Calculator/](https://msaintjean27.github.io/AreaCalculator/))
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Click%20Here-brightgreen)]([https://msaintjean27.github.io/Area-Calculator/])
 
 ---
 
