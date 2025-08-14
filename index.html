@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Area Calculator</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121a33;
+      --panel-2: #0f1730;
+      --text: #eef3ff;
+      --muted: #bcc7e6;
+      --accent: #6aa8ff;
+      --accent-2: #7ef0d4;
+      --error: #ff7a7a;
+      --radius: 18px;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 800px at 10% -10%, #1b2652 0%, #0b1020 40%), var(--bg);
+      color: var(--text);
+      font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .card {
+      width: min(880px, 96vw);
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+      overflow: hidden;
+    }
+    header {
+      padding: 22px 24px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    h1 { font-size: 22px; margin: 0; letter-spacing: 0.2px; }
+    .muted { color: var(--muted); font-size: 14px; }
+    .content {
+      display: grid;
+      gap: 18px;
+      padding: 18px 24px 24px;
+    }
+    .row { display: grid; gap: 12px; }
+    @media (min-width: 760px) {
+      .grid-two { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; }
+    }
+    .panel {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: calc(var(--radius) - 6px);
+      padding: 16px;
+    }
+    label { font-size: 14px; color: var(--muted); }
+    select, input[type="number"] {
+      width: 100%;
+      padding: 12px 12px;
+      background: #0d142b;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      outline: none;
+    }
+    select:focus, input[type="number"]:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(106,168,255,0.15); }
+    .inputs { display: grid; gap: 12px; }
+    .btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    button {
+      appearance: none;
+      border: 0;
+      padding: 12px 14px;
+      border-radius: 12px;
+      color: var(--text);
+      cursor: pointer;
+      transition: transform .05s ease, filter .2s ease;
+    }
+    .primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0b1020; font-weight: 600; }
+    .ghost { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); }
+    button:active { transform: translateY(1px); }
+    .result {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: .4px;
+    }
+    .code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px; color: var(--muted);
+    }
+    .error { color: var(--error); font-size: 14px; min-height: 1.2em; }
+    footer { padding: 10px 24px 22px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="card" role="region" aria-label="Area Calculator">
+    <header>
+      <div>
+        <h1>Area Calculator</h1>
+        <div class="muted">Choose a shape, enter dimensions, get the area.</div>
+      </div>
+    </header>
+
+    <div class="content grid-two">
+      <section class="panel" aria-labelledby="shape-label">
+        <div class="row">
+          <label id="shape-label" for="shape">Shape</label>
+          <select id="shape" aria-describedby="shape-hint">
+            <option value="circle">Circle</option>
+            <option value="triangle">Triangle</option>
+            <option value="rectangle">Rectangle</option>
+            <option value="square">Square</option>
+            <option value="trapezoid">Trapezoid</option>
+          </select>
+          <div id="shape-hint" class="muted code">Use non-negative numbers. Units are arbitrary (e.g., cm).</div>
+        </div>
+
+        <div class="row inputs" id="inputs"></div>
+
+        <div class="row btns">
+          <button class="primary" id="calcBtn" aria-label="Calculate area">Calculate</button>
+          <button class="ghost" id="resetBtn" aria-label="Reset inputs">Reset</button>
+        </div>
+        <div class="error" id="error"></div>
+      </section>
+
+      <section class="panel" aria-live="polite">
+        <div class="muted">Result</div>
+        <div class="result" id="result">—</div>
+        <div class="muted" id="formula">&nbsp;</div>
+      </section>
+    </div>
+
+    <footer>
+      <div class="muted">Matches your Java CLI formulas. Rounded to 3 decimals.</div>
+      <div class="muted"><a href="#" id="linkReadme">How to use</a></div>
+    </footer>
+  </div>
+
+  <script>
+    const inputsEl = document.getElementById('inputs');
+    const shapeEl = document.getElementById('shape');
+    const resultEl = document.getElementById('result');
+    const formulaEl = document.getElementById('formula');
+    const errorEl = document.getElementById('error');
+
+    const F = {
+      circle: {
+        fields: [
+          { id: 'radius', label: 'Radius', min: 0 }
+        ],
+        area: ({ radius }) => Math.PI * Math.pow(radius, 2),
+        formula: 'Area = π × r²'
+      },
+      triangle: {
+        fields: [
+          { id: 'base', label: 'Base', min: 0 },
+          { id: 'height', label: 'Height', min: 0 }
+        ],
+        area: ({ base, height }) => 0.5 * base * height,
+        formula: 'Area = 1/2 × base × height'
+      },
+      rectangle: {
+        fields: [
+          { id: 'length', label: 'Length', min: 0 },
+          { id: 'width', label: 'Width', min: 0 }
+        ],
+        area: ({ length, width }) => length * width,
+        formula: 'Area = length × width'
+      },
+      square: {
+        fields: [
+          { id: 'side', label: 'Side length', min: 0 }
+        ],
+        area: ({ side }) => Math.pow(side, 2),
+        formula: 'Area = side²'
+      },
+      trapezoid: {
+        fields: [
+          { id: 'baseA', label: 'Base A', min: 0 },
+          { id: 'baseB', label: 'Base B', min: 0 },
+          { id: 'height', label: 'Height', min: 0 }
+        ],
+        area: ({ baseA, baseB, height }) => 0.5 * (baseA + baseB) * height,
+        formula: 'Area = ( (a + b) / 2 ) × height'
+      }
+    };
+
+    function renderFields() {
+      const s = shapeEl.value;
+      const spec = F[s];
+      inputsEl.innerHTML = spec.fields.map(f => `
+        <div class="row">
+          <label for="${f.id}">${f.label}</label>
+          <input type="number" inputmode="decimal" step="any" id="${f.id}" min="${f.min}" placeholder="0" />
+        </div>
+      `).join('');
+      formulaEl.textContent = spec.formula;
+      errorEl.textContent = '';
+      resultEl.textContent = '—';
+    }
+
+    function readValues(spec) {
+      const obj = {};
+      for (const f of spec.fields) {
+        const el = document.getElementById(f.id);
+        const v = el.value.trim();
+        if (v === '') return { ok: false, msg: `Please enter ${f.label.toLowerCase()}.` };
+        const n = Number(v);
+        if (!Number.isFinite(n)) return { ok: false, msg: `${f.label} must be a number.` };
+        if (n < 0) return { ok: false, msg: `${f.label} cannot be negative.` };
+        obj[f.id] = n;
+      }
+      return { ok: true, data: obj };
+    }
+
+    function format(n) {
+      return Number.isFinite(n) ? n.toFixed(3) : '—';
+    }
+
+    document.getElementById('calcBtn').addEventListener('click', () => {
+      const spec = F[shapeEl.value];
+      const rv = readValues(spec);
+      if (!rv.ok) { errorEl.textContent = rv.msg; resultEl.textContent = '—'; return; }
+      const area = spec.area(rv.data);
+      errorEl.textContent = '';
+      resultEl.textContent = format(area);
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      renderFields();
+    });
+
+    shapeEl.addEventListener('change', renderFields);
+
+    document.getElementById('linkReadme').addEventListener('click', (e) => {
+      e.preventDefault();
+      alert('Choose a shape, fill the fields, and click Calculate. Values are unit-agnostic (e.g., cm).');
+    });
+
+    // initial
+    renderFields();
+  </script>
+</body>
+</html>
