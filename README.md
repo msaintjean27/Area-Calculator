@@ -32,3 +32,5 @@ The project demonstrates basic control flow, user input handling, and UI design 
 ![Web UI Screenshot](AreaCalculator.png)
 
 **Java CLI**  
+![Web UI Screenshot](TerminalCalculator.png)
+
